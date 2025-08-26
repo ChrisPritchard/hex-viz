@@ -1,7 +1,8 @@
-[gd_scene load_steps=8 format=3 uid="uid://b4ds1oyfprh51"]
+[gd_scene load_steps=9 format=3 uid="uid://b4ds1oyfprh51"]
 
 [ext_resource type="Script" uid="uid://drj2jhbd68yjs" path="res://scripts/SceneManager.cs" id="1_0wfyh"]
 [ext_resource type="PackedScene" uid="uid://wp6ni4hdjsct" path="res://scenes/HexColumn.tscn" id="2_sugp2"]
+[ext_resource type="Script" uid="uid://bm81lhfydyl81" path="res://scripts/CameraMover.cs" id="3_sugp2"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_o5qli"]
 sky_horizon_color = Color(0.662243, 0.671743, 0.686743, 1)
@@ -34,15 +35,14 @@ HexColumn = ExtResource("2_sugp2")
 environment = SubResource("Environment_sugp2")
 
 [node name="Camera3D" type="Camera3D" parent="."]
-transform = Transform3D(0.948307, 0.171671, -0.266913, 0, 0.841058, 0.540945, 0.317354, -0.512982, 0.797581, -0.168151, 2.84995, 3.72581)
+transform = Transform3D(0.948307, 0.171671, -0.266913, 0, 0.841058, 0.540945, 0.317354, -0.512982, 0.797581, 0.916429, 5.23365, 9.68925)
 projection = 1
 current = true
-size = 3.41
-
-[node name="MeshInstance3D" parent="." instance=ExtResource("2_sugp2")]
+size = 10.0
+script = ExtResource("3_sugp2")
 
 [node name="Floor" type="MeshInstance3D" parent="."]
-transform = Transform3D(8.22275, 0, 0, 0, -0.00627887, 0, 0, 0, 7.54188, -0.0453475, -0.454341, -0.0501539)
+transform = Transform3D(21.805, 0, -1.74846e-06, 0, -0.016, 0, 1.90625e-06, 0, 20, -0.0453475, -0.454341, -0.0501539)
 mesh = SubResource("BoxMesh_sugp2")
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
