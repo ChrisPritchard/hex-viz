@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using System.Security.AccessControl;
+using System.Threading.Tasks;
 using Godot;
 
 namespace HexViz
@@ -9,8 +10,8 @@ namespace HexViz
     {
         [Export] public PackedScene HexColumn { get; set; }
 
-        [Export] public uint Rows { get; set; } = 50;
-        [Export] public uint Cols { get; set; } = 50;
+        [Export] public uint Rows { get; set; } = 100;
+        [Export] public uint Cols { get; set; } = 100;
         [Export] public double GapBetweenHexes { get; set; } = 0.08;
 
         [Export(PropertyHint.File, "*.txt")] public string TestMapPath { get; set; }
@@ -40,24 +41,25 @@ namespace HexViz
 
         private void RaiseShape(bool[,] grid)
         {
-            var x_mul = (double)map_grid.GetLength(0) / grid.GetLength(0);
-            var y_mul = (double)map_grid.GetLength(1) / grid.GetLength(1);
+            var x_scale = (double)Rows / grid.GetLength(0);
+            var y_scale = (double)Cols / grid.GetLength(1);
+            var rnd = new Random();
 
-            for (var i = 0; i < grid.GetLength(0); i++)
-                for (var j = 0; j < grid.GetLength(1); j++)
+            for (var x = 0; x < Rows; x++)
+                for (var y = 0; y < Cols; y++)
                 {
-                    var mi = (int)(i / x_mul);
-                    var mj = (int)(j / y_mul);
+                    var mx = (int)(x / x_scale);
+                    var my = (int)(y / y_scale);
 
-                    if (grid[i, j])
+                    if (grid[mx, my])
                     {
-                        map_grid[mi, mj].Raise();
-                        map_grid[mi, mj].SetColour(Colors.White);
+                        map_grid[x, y].Raise(rnd.NextDouble() * 5);
+                        map_grid[x, y].SetColour(Colors.White);
                     }
                     else
                     {
-                        map_grid[mi, mj].Lower();
-                        map_grid[mi, mj].SetColour(Colors.Black);
+                        map_grid[x, y].Lower(rnd.NextDouble() * 5);
+                        map_grid[x, y].SetColour(Colors.Black);
                     }
                 }
         }

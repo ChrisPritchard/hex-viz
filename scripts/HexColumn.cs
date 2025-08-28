@@ -51,16 +51,22 @@ namespace HexViz
             tween.SetTrans(Tween.TransitionType.Quad);
         }
 
-        public void Raise()
+        public void Raise(double delaySecs = 0)
         {
+            if (Raised)
+                return;
             SetupTween();
+            tween.TweenInterval(delaySecs);
             tween.TweenProperty(this, "position:y", top_height, animation_duration);
             Raised = true;
         }
 
-        public void Lower()
+        public void Lower(double delaySecs = 0)
         {
+            if (!Raised)
+                return;
             SetupTween();
+            tween.TweenInterval(delaySecs);
             tween.TweenProperty(this, "position:y", bottom_height, animation_duration);
             Raised = false;
         }

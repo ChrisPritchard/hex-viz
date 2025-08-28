@@ -14,6 +14,8 @@ sky_material = SubResource("ProceduralSkyMaterial_o5qli")
 [sub_resource type="Environment" id="Environment_sugp2"]
 sky = SubResource("Sky_0wfyh")
 ambient_light_source = 1
+ambient_light_color = Color(1, 1, 1, 1)
+ambient_light_energy = 0.1
 reflected_light_source = 1
 tonemap_mode = 2
 glow_enabled = true
@@ -22,13 +24,13 @@ glow_bloom = 0.13
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_0wfyh"]
 albedo_color = Color(0, 0, 0, 1)
+metallic_specular = 0.0
 roughness = 0.0
 
 [sub_resource type="BoxMesh" id="BoxMesh_sugp2"]
 material = SubResource("StandardMaterial3D_0wfyh")
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_sugp2"]
-emission_enabled = true
 emission = Color(1, 1, 1, 1)
 
 [sub_resource type="SphereMesh" id="SphereMesh_jyhfs"]
@@ -37,13 +39,13 @@ material = SubResource("StandardMaterial3D_sugp2")
 [node name="MainScene" type="Node3D"]
 script = ExtResource("1_0wfyh")
 HexColumn = ExtResource("2_sugp2")
-TestMapPath = "res://assets/world_map_50x50.txt"
+TestMapPath = "res://assets/world_map_100x100.txt"
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
 environment = SubResource("Environment_sugp2")
 
 [node name="Camera3D" type="Camera3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 0.866025, 0.5, 0, -0.5, 0.866025, 25, 65.965, 130)
+transform = Transform3D(0.996927, -0.0391687, 0.0678421, 0, 0.866025, 0.5, -0.0783373, -0.498464, 0.863364, 40.7811, 65.965, 140)
 projection = 1
 current = true
 size = 40.0
@@ -53,17 +55,16 @@ script = ExtResource("3_sugp2")
 transform = Transform3D(-200, 0, 1.60373e-05, 0, 0.148, 0, -1.74846e-05, 0, -183.445, -0.0453475, -0.454341, -0.0501539)
 mesh = SubResource("BoxMesh_sugp2")
 
-[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
-transform = Transform3D(0.887373, 0, 0.461052, -0.0829358, 0.983688, 0.159624, -0.453531, -0.179884, 0.872898, 4.85007, 0.919092, 3.97967)
-light_energy = 1.2
-
-[node name="RimLight" type="DirectionalLight3D" parent="."]
-transform = Transform3D(-0.81307, 0, -0.582166, -0.183702, 0.948909, 0.256564, 0.552422, 0.31555, -0.77153, -2.42074, 1.57635, -6.23048)
-light_energy = 0.8
-light_indirect_energy = 0.8
-sky_mode = 1
-
 [node name="CamTest" type="MeshInstance3D" parent="."]
-transform = Transform3D(20, 0, 0, 0, 20, 0, 0, 0, 20, 0, 14.3778, 0.67482)
+transform = Transform3D(20, 0, 0, 0, 20, 0, 0, 0, 20, 29.181, 14.3778, 22.6703)
 visible = false
 mesh = SubResource("SphereMesh_jyhfs")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.989523, 0.144373, 0, -0.144373, 0.989523, 0, 22.058, 0)
+light_energy = 0.5
+
+[node name="DirectionalLight3D2" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.173507, 0.977615, 0.119016, 0.80618, -0.210403, 0.552996, 0.565658, 0, -0.82464, 0, 53.1436, 0)
+light_color = Color(0.468124, 0.990921, 0.999999, 1)
+light_energy = 0.8
