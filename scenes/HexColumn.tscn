@@ -1,4 +1,4 @@
-[gd_scene load_steps=4 format=3 uid="uid://wp6ni4hdjsct"]
+[gd_scene load_steps=5 format=3 uid="uid://wp6ni4hdjsct"]
 
 [ext_resource type="Script" uid="uid://bdprd0gm2cco2" path="res://scripts/HexColumn.cs" id="1_u4oyu"]
 
@@ -17,6 +17,15 @@ height = 4.0
 radial_segments = 6
 rings = 0
 
-[node name="MeshInstance3D" type="MeshInstance3D"]
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_u4oyu"]
+height = 4.0
+
+[node name="MeshInstance3D" type="MeshInstance3D" node_paths=PackedStringArray("CollisionBox")]
 mesh = SubResource("CylinderMesh_u4oyu")
 script = ExtResource("1_u4oyu")
+CollisionBox = NodePath("Area3D")
+
+[node name="Area3D" type="Area3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Area3D"]
+shape = SubResource("CylinderShape3D_u4oyu")
