@@ -35,14 +35,14 @@ HexColumn = ExtResource("2_sugp2")
 environment = SubResource("Environment_sugp2")
 
 [node name="Camera3D" type="Camera3D" parent="."]
-transform = Transform3D(0.948307, 0.171671, -0.266913, 0, 0.841058, 0.540945, 0.317354, -0.512982, 0.797581, 0.916429, 5.23365, 9.68925)
+transform = Transform3D(0.948307, 0.171671, -0.266913, 0, 0.841058, 0.540945, 0.317354, -0.512982, 0.797581, -9.57143, 65.9648, 116.367)
 projection = 1
 current = true
-size = 10.0
+size = 40.0
 script = ExtResource("3_sugp2")
 
 [node name="Floor" type="MeshInstance3D" parent="."]
-transform = Transform3D(21.805, 0, -1.74846e-06, 0, -0.016, 0, 1.90625e-06, 0, 20, -0.0453475, -0.454341, -0.0501539)
+transform = Transform3D(-200, 0, 1.60373e-05, 0, 0.148, 0, -1.74846e-05, 0, -183.445, -0.0453475, -0.454341, -0.0501539)
 mesh = SubResource("BoxMesh_sugp2")
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]

@@ -2,21 +2,21 @@
 
 [ext_resource type="Script" uid="uid://bdprd0gm2cco2" path="res://scripts/HexColumn.cs" id="1_u4oyu"]
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_sgp6g"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_u4oyu"]
 metallic = 0.3
 roughness = 0.4
-emission_enabled = true
 emission = Color(0.945098, 0.341176, 0.341176, 1)
 emission_energy_multiplier = 0.5
 clearcoat_enabled = true
 clearcoat = 0.21
 clearcoat_roughness = 0.76
 
-[sub_resource type="CylinderMesh" id="CylinderMesh_o5qli"]
-material = SubResource("StandardMaterial3D_sgp6g")
+[sub_resource type="CylinderMesh" id="CylinderMesh_u4oyu"]
+material = SubResource("StandardMaterial3D_u4oyu")
+height = 4.0
 radial_segments = 6
 rings = 0
 
 [node name="MeshInstance3D" type="MeshInstance3D"]
-mesh = SubResource("CylinderMesh_o5qli")
+mesh = SubResource("CylinderMesh_u4oyu")
 script = ExtResource("1_u4oyu")

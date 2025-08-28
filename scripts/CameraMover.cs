@@ -1,37 +1,36 @@
 
 using Godot;
-using System;
 
-public partial class CameraMover : Camera3D
+namespace HexViz
 {
-    [Export] public float MoveSpeed = 5.0f;
-    [Export] public float FastMultiplier = 2.5f;
-
-    public override void _Process(double delta)
+    public partial class CameraMover : Camera3D
     {
-        Vector3 velocity = Vector3.Zero;
-        float deltaFloat = (float)delta;
+        [Export] public float MoveSpeed = 5.0f;
+        [Export] public float FastMultiplier = 2.5f;
 
-        // Get camera basis vectors
-        Vector3 right = GlobalTransform.Basis.X;
-        Vector3 up = GlobalTransform.Basis.Y;
-
-        // Horizontal movement
-        if (Input.IsKeyPressed(Key.D) || Input.IsActionPressed("ui_right"))
-            velocity += right;
-        if (Input.IsKeyPressed(Key.A) || Input.IsActionPressed("ui_left"))
-            velocity -= right;
-        if (Input.IsKeyPressed(Key.W) || Input.IsActionPressed("ui_down"))
-            velocity += up;
-        if (Input.IsKeyPressed(Key.S) || Input.IsActionPressed("ui_up"))
-            velocity -= up;
-
-        // Apply movement
-        if (velocity.Length() > 0)
+        public override void _Process(double delta)
         {
-            velocity = velocity.Normalized();
-            float currentSpeed = MoveSpeed * (Input.IsKeyPressed(Key.Shift) ? FastMultiplier : 1.0f);
-            GlobalTranslate(velocity * currentSpeed * deltaFloat);
+            var velocity = Vector3.Zero;
+            var deltaFloat = (float)delta;
+
+            var right = GlobalTransform.Basis.X;
+            var up = GlobalTransform.Basis.Y;
+
+            if (Input.IsKeyPressed(Key.D) || Input.IsActionPressed("ui_right"))
+                velocity += right;
+            if (Input.IsKeyPressed(Key.A) || Input.IsActionPressed("ui_left"))
+                velocity -= right;
+            if (Input.IsKeyPressed(Key.W) || Input.IsActionPressed("ui_down"))
+                velocity += up;
+            if (Input.IsKeyPressed(Key.S) || Input.IsActionPressed("ui_up"))
+                velocity -= up;
+
+            if (velocity.Length() > 0)
+            {
+                velocity = velocity.Normalized();
+                float currentSpeed = MoveSpeed * (Input.IsKeyPressed(Key.Shift) ? FastMultiplier : 1.0f);
+                GlobalTranslate(velocity * currentSpeed * deltaFloat);
+            }
         }
     }
 }

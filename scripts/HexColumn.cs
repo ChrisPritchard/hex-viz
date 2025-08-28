@@ -1,77 +1,52 @@
-using Godot;
 using System;
+using Godot;
 
-public partial class HexColumn : MeshInstance3D
+namespace HexViz
 {
-    [Export] private double amplitude = 0.3f;
-    [Export] private double frequency = 0.8f;
-    [Export] private double phaseOffset = 0.0f;
-    [Export] private bool startAutomatically = true;
-
-    private Vector3 originalPosition;
-    private double time = 0.0f;
-    private bool isFloating = false;
-
-    public override void _Ready()
+    public partial class HexColumn : MeshInstance3D
     {
-        originalPosition = GlobalTransform.Origin;
+        private Tween tween;
 
-        if (startAutomatically)
+        private float top_height;
+        private float bottom_height;
+        private float animation_duration = 5.0f;
+
+        public override void _Ready()
         {
-            StartFloating();
+            bottom_height = GetAabb().Position.Y;
+            top_height = GetAabb().Size.Y + bottom_height;
         }
-    }
 
-    public override void _Process(double delta)
-    {
-        if (!isFloating) return;
+        private void SetupTween()
+        {
+            if (tween != null && tween.IsRunning())
+                tween.Kill();
+            tween = CreateTween();
+            tween.SetParallel(false);
+            tween.SetEase(Tween.EaseType.Out);
+            tween.SetTrans(Tween.TransitionType.Expo);
+        }
 
-        time += delta;
-        UpdatePosition();
-    }
+        public void Raise()
+        {
+            SetupTween();
+            tween.TweenProperty(this, "position:y", top_height, animation_duration);
+        }
 
-    private void UpdatePosition()
-    {
-        // Sine wave calculation with phase offset
-        double sineValue = Mathf.Sin((time * frequency) + phaseOffset);
-        double newY = originalPosition.Y + (sineValue * amplitude);
+        public void Drop()
+        {
+            SetupTween();
+            tween.TweenProperty(this, "position:y", bottom_height, animation_duration);
+        }
 
-        Vector3 newPosition = new Vector3(
-            originalPosition.X,
-            (float)newY,
-            originalPosition.Z
-        );
+        internal void SetColour(Color colour)
+        {
+            var newMat = new StandardMaterial3D
+            {
+                AlbedoColor = colour
+            };
 
-        GlobalTransform = new Transform3D(GlobalTransform.Basis, newPosition);
-    }
-
-    // Public methods to control the floating
-    public void StartFloating()
-    {
-        isFloating = true;
-        time = 0.0f;
-    }
-
-    public void StopFloating()
-    {
-        isFloating = false;
-        // Return to original position
-        GlobalTransform = new Transform3D(GlobalTransform.Basis, originalPosition);
-    }
-
-    public void SetAmplitude(float newAmplitude)
-    {
-        amplitude = newAmplitude;
-    }
-
-    public void SetFrequency(float newFrequency)
-    {
-        frequency = newFrequency;
-    }
-
-    public void ResetPosition()
-    {
-        GlobalTransform = new Transform3D(GlobalTransform.Basis, originalPosition);
-        time = 0.0f;
+            SetSurfaceOverrideMaterial(0, newMat);
+        }
     }
 }
