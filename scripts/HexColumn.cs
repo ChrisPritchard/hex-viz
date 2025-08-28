@@ -34,7 +34,7 @@ namespace HexViz
                 }
                 else
                 {
-                    Drop();
+                    Lower();
                     SetColour(Colors.Yellow);
                 }
             }
@@ -58,7 +58,7 @@ namespace HexViz
             Raised = true;
         }
 
-        public void Drop()
+        public void Lower()
         {
             SetupTween();
             tween.TweenProperty(this, "position:y", bottom_height, animation_duration);

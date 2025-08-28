@@ -30,6 +30,7 @@ material = SubResource("StandardMaterial3D_0wfyh")
 [node name="MainScene" type="Node3D"]
 script = ExtResource("1_0wfyh")
 HexColumn = ExtResource("2_sugp2")
+TestMapPath = "res://assets/world_map_50x50.txt"
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
 environment = SubResource("Environment_sugp2")
