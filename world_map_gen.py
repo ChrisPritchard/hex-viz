@@ -1,3 +1,4 @@
+import sys
 import numpy as np
 import cartopy.feature as cfeature
 import cartopy.crs as ccrs
@@ -87,21 +88,6 @@ def save_map_to_file(is_land, filename='world_map.txt'):
                 f.write('1' if is_land[x, y] else '0')
             f.write('\n')
 
-def load_map_from_file(filename='world_map.txt'):
-    """Load a boolean array from a text file."""
-    with open(filename, 'r') as f:
-        dimensions = f.readline().strip().split(',')
-        width, height = int(dimensions[0]), int(dimensions[1])
-        
-        is_land = np.full((width, height), False, dtype=bool)
-        
-        for y in range(height):
-            line = f.readline().strip()
-            for x in range(width):
-                is_land[x, y] = (line[x] == '1')
-    
-    return is_land
-
 def visualize_map(is_land):
     """Visualize the generated map."""
     plt.figure(figsize=(10, 10))
@@ -114,17 +100,16 @@ def visualize_map(is_land):
 
 # Example usage
 if __name__ == "__main__":
-    # Generate the world map (this might take a while)
-    print("Generating world map...")
-    world_map = generate_real_world_map(50, 50)
+
+    dim = 50
+    if len(sys.argv) >= 2:
+        dim = int(sys.argv[1])
+
+    print(f"Generating world map with dim {dim}...")
+    world_map = generate_real_world_map(dim, dim)
     
-    # Save to file for later use
-    save_map_to_file(world_map, 'world_map_50x50.txt')
+    save_map_to_file(world_map, f'world_map_{dim}x{dim}.txt')
     
-    # Visualize the result
     visualize_map(world_map)
-    
-    # To load the map later:
-    # loaded_map = load_map_from_file('world_map_50x50.txt')
-    
+        
     print("Map generation complete!")
