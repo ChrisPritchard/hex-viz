@@ -23,11 +23,17 @@ namespace HexViz
 
             var test_map_file = FileAccess.Open(TestMapPath, FileAccess.ModeFlags.Read);
             var test_map_data = test_map_file.GetAsText().Split("\n");
+
             var dim = test_map_data[0].Split(",").Select(int.Parse).ToArray();
-            var test_map = new bool[dim[0], dim[1]];
-            for (var i = 0; i < dim[0]; i++)
-                for (var j = 0; j < dim[1]; j++)
-                    test_map[i, j] = test_map_data[j + 1][i] == '1';
+            var (w, h) = (dim[0], dim[1]);
+            var test_map = new bool[w, h];
+
+            test_map_data = test_map_data[1..];
+
+            // each line in the map file is a col, with left to right being bottom to top
+            for (var y = 0; y < h; y++)
+                for (var x = 0; x < w; x++)
+                    test_map[x, y] = test_map_data[y][w - x] == '1';
 
             RaiseShape(test_map);
         }

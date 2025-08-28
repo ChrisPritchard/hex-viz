@@ -43,7 +43,7 @@ TestMapPath = "res://assets/world_map_50x50.txt"
 environment = SubResource("Environment_sugp2")
 
 [node name="Camera3D" type="Camera3D" parent="."]
-transform = Transform3D(-1, 4.37114e-08, -7.57103e-08, 0, 0.866025, 0.5, 8.74228e-08, 0.5, -0.866025, 25, 65.965, -95.319)
+transform = Transform3D(1, 0, 0, 0, 0.866025, 0.5, 0, -0.5, 0.866025, 25, 65.965, 130)
 projection = 1
 current = true
 size = 40.0
