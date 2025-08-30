@@ -1,7 +1,5 @@
 using System;
 using System.Linq;
-using System.Security.AccessControl;
-using System.Threading.Tasks;
 using Godot;
 
 namespace HexViz
@@ -12,7 +10,7 @@ namespace HexViz
 
         [Export] public uint Rows { get; set; } = 100;
         [Export] public uint Cols { get; set; } = 100;
-        [Export] public double GapBetweenHexes { get; set; } = 0.08;
+        [Export] public double GapBetweenHexes { get; set; } = 0.00;
 
         [Export(PropertyHint.File, "*.txt")] public string TestMapPath { get; set; }
 
