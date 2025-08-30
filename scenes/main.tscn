@@ -31,6 +31,7 @@ roughness = 0.0
 material = SubResource("StandardMaterial3D_0wfyh")
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_sugp2"]
+albedo_color = Color(1, 0, 0, 1)
 emission = Color(1, 1, 1, 1)
 
 [sub_resource type="SphereMesh" id="SphereMesh_jyhfs"]
@@ -45,10 +46,10 @@ TestMapPath = "res://assets/world_map_100x100.txt"
 environment = SubResource("Environment_sugp2")
 
 [node name="Camera3D" type="Camera3D" parent="."]
-transform = Transform3D(0.996927, -0.0391687, 0.0678421, 0, 0.866025, 0.5, -0.0783373, -0.498464, 0.863364, 40.7811, 65.965, 140)
+transform = Transform3D(0.999455, -0.027553, 0.018184, 0.00606196, 0.694632, 0.71934, -0.0324511, -0.718837, 0.69442, 50, 200, 230)
 projection = 1
 current = true
-size = 40.0
+size = 70.0
 script = ExtResource("3_sugp2")
 
 [node name="Floor" type="MeshInstance3D" parent="."]
@@ -56,8 +57,7 @@ transform = Transform3D(-200, 0, 1.60373e-05, 0, 0.148, 0, -1.74846e-05, 0, -183
 mesh = SubResource("BoxMesh_sugp2")
 
 [node name="CamTest" type="MeshInstance3D" parent="."]
-transform = Transform3D(20, 0, 0, 0, 20, 0, 0, 0, 20, 29.181, 14.3778, 22.6703)
-visible = false
+transform = Transform3D(20, 0, 0, 0, 20, 0, 0, 0, 20, 44.1495, 1.31213, 35.2503)
 mesh = SubResource("SphereMesh_jyhfs")
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]

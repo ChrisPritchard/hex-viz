@@ -37,6 +37,34 @@ namespace HexViz
             RaiseShape(test_map);
         }
 
+        private void SetupGrid()
+        {
+            map_grid = new HexColumn[Rows, Cols];
+            var radius = ((CylinderMesh)HexColumn.Instantiate<HexColumn>().Mesh).TopRadius + GapBetweenHexes;
+
+            var grid = new Node
+            {
+                Name = "Map"
+            };
+            AddChild(grid);
+
+            // calculations on hex offsets taken from here: https://www.redblobgames.com/grids/hexagons/
+            for (var i = 0; i < Cols; i++)
+                for (var j = 0; j < Rows; j++)
+                {
+                    var offset_y = j * radius * 1.5;
+                    var offset_x = i * radius * Math.Sqrt(3);
+                    if (j % 2 == 1)
+                        offset_x += radius * Math.Sqrt(3) / 2;
+
+                    var new_col = HexColumn.Instantiate<HexColumn>();
+                    new_col.Translate(new Vector3((float)offset_x, 0, (float)offset_y));
+                    grid.AddChild(new_col);
+
+                    map_grid[j, i] = new_col;
+                }
+        }
+
         private void RaiseShape(bool[,] grid)
         {
             var x_scale = (double)Rows / grid.GetLength(0);
@@ -59,29 +87,6 @@ namespace HexViz
                         map_grid[x, y].Lower(rnd.NextDouble() * 5);
                         map_grid[x, y].SetColour(Colors.Black);
                     }
-                }
-        }
-
-
-        private void SetupGrid()
-        {
-            map_grid = new HexColumn[Rows, Cols];
-            var radius = ((CylinderMesh)HexColumn.Instantiate<HexColumn>().Mesh).TopRadius + GapBetweenHexes;
-
-            // calculations on hex offsets taken from here: https://www.redblobgames.com/grids/hexagons/
-            for (var i = 0; i < Cols; i++)
-                for (var j = 0; j < Rows; j++)
-                {
-                    var offset_y = j * radius * 1.5;
-                    var offset_x = i * radius * Math.Sqrt(3);
-                    if (j % 2 == 1)
-                        offset_x += radius * Math.Sqrt(3) / 2;
-
-                    var new_col = HexColumn.Instantiate<HexColumn>();
-                    new_col.Translate(new Vector3((float)offset_x, 0, (float)offset_y));
-                    AddChild(new_col);
-
-                    map_grid[j, i] = new_col;
                 }
         }
     }
