@@ -1,7 +1,6 @@
-[gd_scene load_steps=11 format=3 uid="uid://b4ds1oyfprh51"]
+[gd_scene load_steps=10 format=3 uid="uid://b4ds1oyfprh51"]
 
 [ext_resource type="Script" uid="uid://drj2jhbd68yjs" path="res://scripts/SceneManager.cs" id="1_0wfyh"]
-[ext_resource type="Script" uid="uid://bm81lhfydyl81" path="res://scripts/CameraMover.cs" id="3_sugp2"]
 [ext_resource type="PackedScene" uid="uid://k54us38emok1" path="res://scenes/tile_area.tscn" id="3_tbgi4"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_jyhfs"]
@@ -55,7 +54,6 @@ transform = Transform3D(0.999455, -0.027553, 0.018184, 0.00606196, 0.694632, 0.7
 projection = 1
 current = true
 size = 70.0
-script = ExtResource("3_sugp2")
 
 [node name="MapGrid" type="MultiMeshInstance3D" parent="."]
 

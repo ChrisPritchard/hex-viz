@@ -24,7 +24,6 @@ namespace HexViz
         private Transform3D[] tile_positions;
         private Area3D[] tile_areas;
         private readonly Dictionary<int, Tween> tile_tweens = [];
-        private readonly HashSet<int> tiles_raised = [];
 
         private readonly Dictionary<string, bool[,]> maps = [];
 
@@ -155,7 +154,7 @@ namespace HexViz
 
         private bool RaiseTile(int index, float height, Color new_colour, float duration_secs = 2f)
         {
-            if (tiles_raised.Contains(index))
+            if (multi_mesh.GetInstanceColor(index) == Colors.Green)
                 return false;
 
             if (tile_tweens.TryGetValue(index, out Tween tween))
@@ -164,15 +163,15 @@ namespace HexViz
             SetupTween(index, true);
             tile_tweens[index].SetParallel(true);
 
-            var start = tile_positions[index].Origin;
-            var target = start + Vector3.Up * height;
+            var base_start = tile_positions[index].Origin;
+            var target = base_start + Vector3.Up * height;
+            var actual_start = multi_mesh.GetInstanceTransform(index).Origin;
             tile_tweens[index].TweenMethod(Callable.From<Vector3>(position =>
             {
                 var newTransform = new Transform3D(tile_positions[index].Basis, position);
                 multi_mesh.SetInstanceTransform(index, newTransform);
                 tile_areas[index].GlobalPosition = position;
-            }), start, target, duration_secs);
-            tile_tweens[index].Finished += () => tiles_raised.Add(index);
+            }), actual_start, target, duration_secs);
 
             tile_tweens[index].TweenMethod(Callable.From<Color>(colour =>
             {
@@ -190,7 +189,7 @@ namespace HexViz
 
         private bool LowerTile(int index, Color new_colour, float duration_secs = 2f)
         {
-            if (!tiles_raised.Contains(index))
+            if (multi_mesh.GetInstanceColor(index) == Colors.Black)
                 return false;
 
             if (tile_tweens.TryGetValue(index, out Tween tween))
@@ -207,7 +206,6 @@ namespace HexViz
                 multi_mesh.SetInstanceTransform(index, newTransform);
                 tile_areas[index].GlobalPosition = position;
             }), start, target, duration_secs);
-            tile_tweens[index].Finished += () => tiles_raised.Remove(index);
 
             tile_tweens[index].TweenMethod(Callable.From<Color>(colour =>
             {
@@ -219,12 +217,8 @@ namespace HexViz
 
         private async Task LowerAll()
         {
-            var indices = tiles_raised.ToArray();
-            foreach (var i in indices)
-            {
+            for (var i = 0; i <= Rows * Cols; i++)
                 LowerTile(i, Colors.Black, 2f);
-                multi_mesh.SetInstanceColor(i, Colors.Black);
-            }
 
             await Task.Delay(2000);
         }
@@ -233,10 +227,10 @@ namespace HexViz
         {
             if (@event is InputEventMouseButton mouseEvent && mouseEvent.Pressed && mouseEvent.ButtonIndex == MouseButton.Left)
             {
-                if (!tiles_raised.Contains(index))
-                    RaiseTile(x, y, 4, Colors.Green);
-                else
+                if (multi_mesh.GetInstanceColor(index) == Colors.Green)
                     LowerTile(x, y, Colors.Yellow);
+                else
+                    RaiseTile(x, y, 4, Colors.Green);
             }
         }
     }
