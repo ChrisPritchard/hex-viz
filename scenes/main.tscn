@@ -60,7 +60,7 @@ script = ExtResource("3_sugp2")
 [node name="MapGrid" type="MultiMeshInstance3D" parent="."]
 
 [node name="Floor" type="MeshInstance3D" parent="."]
-transform = Transform3D(-200, 0, 1.60373e-05, 0, 0.148, 0, -1.74846e-05, 0, -183.445, -0.0453475, -0.454341, -0.0501539)
+transform = Transform3D(-200, 0, 1.60373e-05, 0, 0.148, 0, -1.74846e-05, 0, -183.445, -0.045, 2, -0.05)
 mesh = SubResource("BoxMesh_sugp2")
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]

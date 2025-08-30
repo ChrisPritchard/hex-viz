@@ -1,10 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Godot;
-using Microsoft.VisualBasic;
 
 namespace HexViz
 {
@@ -131,37 +129,31 @@ namespace HexViz
 
                     var i = (int)(y * Cols + x);
                     if (grid[mx, my])
-                    {
-                        if (RaiseTile(x, y, ((float)rnd.NextDouble() * 1f) + 1f))
-                            multi_mesh.SetInstanceColor(i, Colors.White);
-                    }
+                        RaiseTile(x, y, ((float)rnd.NextDouble() * 1f) + 1f, Colors.White);
                     else
-                    {
-                        if (LowerTile(x, y))
-                            multi_mesh.SetInstanceColor(i, Colors.Black);
-                    }
+                        LowerTile(x, y, Colors.Black);
                 }
         }
 
         private void SetupTween(int index, bool rising)
         {
-            if (tile_tweens.ContainsKey(index) && tile_tweens[index].IsRunning())
-                tile_tweens[index].Kill();
+            if (tile_tweens.TryGetValue(index, out Tween tween) && tween.IsRunning())
+                tween.Kill();
 
-            var tween = CreateTween();
+            tween = CreateTween();
             tween.SetParallel(false);
             tween.SetEase(rising ? Tween.EaseType.Out : Tween.EaseType.In);
             tween.SetTrans(Tween.TransitionType.Quad);
             tile_tweens[index] = tween;
         }
 
-        private bool RaiseTile(uint x, uint y, float height, float duration_secs = 2f)
+        private bool RaiseTile(uint x, uint y, float height, Color new_colour, float duration_secs = 2f)
         {
             var i = (int)(y * Cols + x);
-            return RaiseTile(i, height, duration_secs);
+            return RaiseTile(i, height, new_colour, duration_secs);
         }
 
-        private bool RaiseTile(int index, float height, float duration_secs = 2f)
+        private bool RaiseTile(int index, float height, Color new_colour, float duration_secs = 2f)
         {
             if (tiles_raised.Contains(index))
                 return false;
@@ -170,6 +162,8 @@ namespace HexViz
                 tween.Kill();
 
             SetupTween(index, true);
+            tile_tweens[index].SetParallel(true);
+
             var start = tile_positions[index].Origin;
             var target = start + Vector3.Up * height;
             tile_tweens[index].TweenMethod(Callable.From<Vector3>(position =>
@@ -179,16 +173,22 @@ namespace HexViz
                 tile_areas[index].GlobalPosition = position;
             }), start, target, duration_secs);
             tile_tweens[index].Finished += () => tiles_raised.Add(index);
+
+            tile_tweens[index].TweenMethod(Callable.From<Color>(colour =>
+            {
+                multi_mesh.SetInstanceColor(index, colour);
+            }), multi_mesh.GetInstanceColor(index), new_colour, duration_secs);
+
             return true;
         }
 
-        private bool LowerTile(uint x, uint y, float duration_secs = 2f)
+        private bool LowerTile(uint x, uint y, Color new_colour, float duration_secs = 2f)
         {
             var i = (int)(y * Cols + x);
-            return LowerTile(i, duration_secs);
+            return LowerTile(i, new_colour, duration_secs);
         }
 
-        private bool LowerTile(int index, float duration_secs = 2f)
+        private bool LowerTile(int index, Color new_colour, float duration_secs = 2f)
         {
             if (!tiles_raised.Contains(index))
                 return false;
@@ -197,6 +197,8 @@ namespace HexViz
                 tween.Kill();
 
             SetupTween(index, false);
+            tile_tweens[index].SetParallel(true);
+
             var start = multi_mesh.GetInstanceTransform(index).Origin;
             var target = tile_positions[index].Origin;
             tile_tweens[index].TweenMethod(Callable.From<Vector3>(position =>
@@ -206,6 +208,12 @@ namespace HexViz
                 tile_areas[index].GlobalPosition = position;
             }), start, target, duration_secs);
             tile_tweens[index].Finished += () => tiles_raised.Remove(index);
+
+            tile_tweens[index].TweenMethod(Callable.From<Color>(colour =>
+            {
+                multi_mesh.SetInstanceColor(index, colour);
+            }), multi_mesh.GetInstanceColor(index), new_colour, duration_secs);
+
             return true;
         }
 
@@ -214,7 +222,7 @@ namespace HexViz
             var indices = tiles_raised.ToArray();
             foreach (var i in indices)
             {
-                LowerTile(i, 2f);
+                LowerTile(i, Colors.Black, 2f);
                 multi_mesh.SetInstanceColor(i, Colors.Black);
             }
 
@@ -226,15 +234,9 @@ namespace HexViz
             if (@event is InputEventMouseButton mouseEvent && mouseEvent.Pressed && mouseEvent.ButtonIndex == MouseButton.Left)
             {
                 if (!tiles_raised.Contains(index))
-                {
-                    if (RaiseTile(x, y, 4))
-                        multi_mesh.SetInstanceColor(index, Colors.Green);
-                }
+                    RaiseTile(x, y, 4, Colors.Green);
                 else
-                {
-                    if (LowerTile(x, y))
-                        multi_mesh.SetInstanceColor(index, Colors.Yellow);
-                }
+                    LowerTile(x, y, Colors.Yellow);
             }
         }
     }
