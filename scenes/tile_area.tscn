@@ -1,0 +1,11 @@
+[gd_scene load_steps=2 format=3 uid="uid://k54us38emok1"]
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_u4oyu"]
+height = 4.0
+
+[node name="Area3D" type="Area3D"]
+physics_interpolation_mode = 2
+monitoring = false
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("CylinderShape3D_u4oyu")

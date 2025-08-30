@@ -18,8 +18,12 @@ namespace HexViz
 
         [Export] private MultiMeshInstance3D MapGrid;
         [Export] private CylinderMesh TileMesh;
+        [Export] private PackedScene TileCollisionArea;
+
+        private MultiMesh multi_mesh;
 
         private Transform3D[] tile_positions;
+        private Area3D[] tile_areas;
         private readonly HashSet<int> rising = [];
         private readonly HashSet<int> lowering = [];
 
@@ -46,7 +50,7 @@ namespace HexViz
 
         private void SetupGrid()
         {
-            var multimesh = new MultiMesh
+            multi_mesh = new MultiMesh
             {
                 UseColors = true,
                 TransformFormat = MultiMesh.TransformFormatEnum.Transform3D,
@@ -54,15 +58,16 @@ namespace HexViz
                 InstanceCount = (int)(Rows * Cols)
 
             };
-            MapGrid.Multimesh = multimesh;
+            MapGrid.Multimesh = multi_mesh;
 
             var radius = TileMesh.TopRadius + GapBetweenHexes;
             var orig_positions = new List<Transform3D>((int)(Rows * Cols));
+            var orig_areas = new List<Area3D>((int)(Rows * Cols));
 
             // calculations on hex offsets taken from here: https://www.redblobgames.com/grids/hexagons/
             var i = 0;
-            for (var y = 0; y < Cols; y++)
-                for (var x = 0; x < Rows; x++)
+            for (var y = 0u; y < Cols; y++)
+                for (var x = 0u; x < Rows; x++)
                 {
                     var offset_y = x * radius * 1.5;
                     var offset_x = y * radius * Math.Sqrt(3);
@@ -71,11 +76,20 @@ namespace HexViz
 
                     var transform = new Transform3D(Basis.Identity, new((float)offset_x, 0, (float)offset_y));
                     orig_positions.Add(transform);
-                    multimesh.SetInstanceTransform(i, transform);
+                    multi_mesh.SetInstanceTransform(i, transform);
+
+                    var collision_area = TileCollisionArea.Instantiate<Area3D>();
+                    collision_area.Translate(transform.Origin);
+                    var (li, lx, ly) = (i, x, y); // to ensure captured correctly in lambda
+                    collision_area.InputEvent += (_, e, _, _, _) => HandleClick(li, lx, ly, e);
+                    orig_areas.Add(collision_area);
+                    MapGrid.AddChild(collision_area);
+
                     i++;
                 }
 
             tile_positions = [.. orig_positions];
+            tile_areas = [.. orig_areas];
         }
 
         private void RenderGrid(bool[,] grid)
@@ -90,16 +104,15 @@ namespace HexViz
                     var my = (int)(y / y_scale);
 
                     var i = (int)(y * Cols + x);
-                    var op = tile_positions[i];
                     if (grid[mx, my])
                     {
                         RaiseTile(x, y);
-                        MapGrid.Multimesh.SetInstanceColor(i, Colors.White);
+                        multi_mesh.SetInstanceColor(i, Colors.White);
                     }
                     else
                     {
                         LowerTile(x, y);
-                        MapGrid.Multimesh.SetInstanceColor(i, Colors.Black);
+                        multi_mesh.SetInstanceColor(i, Colors.Black);
                     }
                 }
         }
@@ -118,26 +131,52 @@ namespace HexViz
             lowering.Add(i);
         }
 
-        public override void _Process(double delta)
+        private void HandleClick(int index, uint x, uint y, InputEvent @event)
         {
-            foreach (var i in rising)
+            if (@event is InputEventMouseButton mouseEvent && mouseEvent.Pressed && mouseEvent.ButtonIndex == MouseButton.Left)
             {
-                var trans = MapGrid.Multimesh.GetInstanceTransform(i);
-                if (trans.Origin.Y >= tile_positions[i].Origin.Y + 2)
-                    rising.Remove(i);
+                if (multi_mesh.GetInstanceColor(index) != Colors.Green)
+                {
+                    RaiseTile(x, y);
+                    multi_mesh.SetInstanceColor(index, Colors.Green);
+                }
                 else
-                    MapGrid.Multimesh.SetInstanceTransform(i, trans.Translated(new(0, 0.01f, 0)));
-            }
-
-            foreach (var i in lowering)
-            {
-                var trans = MapGrid.Multimesh.GetInstanceTransform(i);
-                if (trans.Origin.Y <= tile_positions[i].Origin.Y)
-                    lowering.Remove(i);
-                else
-                    MapGrid.Multimesh.SetInstanceTransform(i, trans.Translated(new(0, -0.01f, 0)));
+                {
+                    LowerTile(x, y);
+                    multi_mesh.SetInstanceColor(index, Colors.Yellow);
+                }
             }
         }
 
+        public override void _Process(double delta)
+        {
+            var rising_indices = rising.ToArray();
+            foreach (var i in rising_indices)
+            {
+                var trans = multi_mesh.GetInstanceTransform(i);
+                if (trans.Origin.Y >= tile_positions[i].Origin.Y + 2)
+                    rising.Remove(i);
+                else
+                {
+                    var new_pos = trans.Translated(new(0, 0.01f, 0));
+                    tile_areas[i].Transform = new_pos;
+                    multi_mesh.SetInstanceTransform(i, new_pos);
+                }
+            }
+
+            var lowering_indices = lowering.ToArray();
+            foreach (var i in lowering_indices)
+            {
+                var trans = multi_mesh.GetInstanceTransform(i);
+                if (trans.Origin.Y <= tile_positions[i].Origin.Y)
+                    lowering.Remove(i);
+                else
+                {
+                    var new_pos = trans.Translated(new(0, -0.01f, 0));
+                    tile_areas[i].Transform = new_pos;
+                    multi_mesh.SetInstanceTransform(i, new_pos);
+                }
+            }
+        }
     }
 }

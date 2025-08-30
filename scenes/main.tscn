@@ -1,8 +1,37 @@
-[gd_scene load_steps=13 format=3 uid="uid://b4ds1oyfprh51"]
+[gd_scene load_steps=17 format=3 uid="uid://b4ds1oyfprh51"]
 
 [ext_resource type="Script" uid="uid://drj2jhbd68yjs" path="res://scripts/SceneManager.cs" id="1_0wfyh"]
-[ext_resource type="PackedScene" uid="uid://wp6ni4hdjsct" path="res://scenes/HexColumn.tscn" id="2_sugp2"]
+[ext_resource type="Script" uid="uid://bdprd0gm2cco2" path="res://scripts/HexColumn.cs" id="2_jyhfs"]
 [ext_resource type="Script" uid="uid://bm81lhfydyl81" path="res://scripts/CameraMover.cs" id="3_sugp2"]
+[ext_resource type="PackedScene" uid="uid://k54us38emok1" path="res://scenes/tile_area.tscn" id="3_tbgi4"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_u4oyu"]
+metallic = 0.3
+roughness = 0.4
+emission = Color(0.945098, 0.341176, 0.341176, 1)
+emission_energy_multiplier = 0.5
+clearcoat_enabled = true
+clearcoat = 0.21
+clearcoat_roughness = 0.76
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_u4oyu"]
+material = SubResource("StandardMaterial3D_u4oyu")
+height = 4.0
+radial_segments = 6
+rings = 0
+
+[sub_resource type="PackedScene" id="PackedScene_tefeu"]
+_bundled = {
+"conn_count": 0,
+"conns": PackedInt32Array(),
+"editable_instances": [],
+"names": PackedStringArray("MeshInstance3D", "mesh", "script", "CollisionBox", "Area3D"),
+"node_count": 2,
+"node_paths": [],
+"nodes": PackedInt32Array(-1, -1, 0, 0, -1, 3, 1, 0, 2, 1, 1073741827, 2, 0, 0, 0, 2147483647, 4, 3, 0, 0),
+"variants": [SubResource("CylinderMesh_u4oyu"), ExtResource("2_jyhfs"), NodePath(""), ExtResource("3_tbgi4")],
+"version": 3
+}
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_jyhfs"]
 vertex_color_use_as_albedo = true
@@ -48,10 +77,11 @@ material = SubResource("StandardMaterial3D_sugp2")
 
 [node name="MainScene" type="Node3D" node_paths=PackedStringArray("MapGrid")]
 script = ExtResource("1_0wfyh")
-HexColumn = ExtResource("2_sugp2")
+HexColumn = SubResource("PackedScene_tefeu")
 TestMapPath = "res://assets/world_map_100x100.txt"
 MapGrid = NodePath("MapGrid")
 TileMesh = SubResource("CylinderMesh_tbgi4")
+TileCollisionArea = ExtResource("3_tbgi4")
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
 environment = SubResource("Environment_sugp2")
