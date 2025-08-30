@@ -8,8 +8,6 @@ namespace HexViz
 {
     public partial class SceneManager : Node3D
     {
-        [Export] public PackedScene HexColumn { get; set; }
-
         [Export] public uint Rows { get; set; } = 100;
         [Export] public uint Cols { get; set; } = 100;
         [Export] public double GapBetweenHexes { get; set; } = 0.00;
@@ -26,6 +24,8 @@ namespace HexViz
         private Area3D[] tile_areas;
         private readonly HashSet<int> rising = [];
         private readonly HashSet<int> lowering = [];
+
+        private readonly (float, float)[] tile_speeds = [(0.9f, 0.01f), (0.95f, 0.005f), (1f, 0.001f)];
 
         public override void _Ready()
         {
@@ -53,6 +53,7 @@ namespace HexViz
             multi_mesh = new MultiMesh
             {
                 UseColors = true,
+                UseCustomData = true,
                 TransformFormat = MultiMesh.TransformFormatEnum.Transform3D,
                 Mesh = TileMesh,
                 InstanceCount = (int)(Rows * Cols)
@@ -97,6 +98,8 @@ namespace HexViz
             var x_scale = (double)Rows / grid.GetLength(0);
             var y_scale = (double)Cols / grid.GetLength(1);
 
+            var rnd = new Random();
+
             for (var x = 0u; x < Rows; x++)
                 for (var y = 0u; y < Cols; y++)
                 {
@@ -106,7 +109,7 @@ namespace HexViz
                     var i = (int)(y * Cols + x);
                     if (grid[mx, my])
                     {
-                        RaiseTile(x, y);
+                        RaiseTile(x, y, ((float)rnd.NextDouble() * 1f) + 1f);
                         multi_mesh.SetInstanceColor(i, Colors.White);
                     }
                     else
@@ -117,18 +120,22 @@ namespace HexViz
                 }
         }
 
-        private void RaiseTile(uint x, uint y)
+        private void RaiseTile(uint x, uint y, float height, float duration_secs = 2f)
         {
             var i = (int)(y * Cols + x);
             lowering.Remove(i);
-            rising.Add(i);
+            if (rising.Add(i))
+                multi_mesh.SetInstanceCustomData(i,
+                new TileAnimData(Time.GetTicksMsec(), duration_secs * 1000, height).AsCustomData());
         }
 
-        private void LowerTile(uint x, uint y)
+        private void LowerTile(uint x, uint y, float duration_secs = 2f)
         {
             var i = (int)(y * Cols + x);
             rising.Remove(i);
-            lowering.Add(i);
+            if (lowering.Add(i))
+                multi_mesh.SetInstanceCustomData(i,
+                new TileAnimData(Time.GetTicksMsec(), duration_secs * 1000, 0).AsCustomData());
         }
 
         private void HandleClick(int index, uint x, uint y, InputEvent @event)
@@ -137,7 +144,7 @@ namespace HexViz
             {
                 if (multi_mesh.GetInstanceColor(index) != Colors.Green)
                 {
-                    RaiseTile(x, y);
+                    RaiseTile(x, y, 4);
                     multi_mesh.SetInstanceColor(index, Colors.Green);
                 }
                 else
@@ -154,11 +161,15 @@ namespace HexViz
             foreach (var i in rising_indices)
             {
                 var trans = multi_mesh.GetInstanceTransform(i);
-                if (trans.Origin.Y >= tile_positions[i].Origin.Y + 2)
+                var data = TileAnimData.FromCustomData(multi_mesh.GetInstanceCustomData(i));
+
+                if (trans.Origin.Y >= tile_positions[i].Origin.Y + data.TargetHeight)
                     rising.Remove(i);
                 else
                 {
-                    var new_pos = trans.Translated(new(0, 0.01f, 0));
+                    var progress = data.Progress(Time.GetTicksMsec());
+                    var speed = tile_speeds.First(a => progress <= a.Item1).Item2 / (data.Duration / 1000f);
+                    var new_pos = trans.Translated(new(0, speed, 0));
                     tile_areas[i].Transform = new_pos;
                     multi_mesh.SetInstanceTransform(i, new_pos);
                 }
@@ -168,10 +179,14 @@ namespace HexViz
             foreach (var i in lowering_indices)
             {
                 var trans = multi_mesh.GetInstanceTransform(i);
+                var data = TileAnimData.FromCustomData(multi_mesh.GetInstanceCustomData(i));
+
                 if (trans.Origin.Y <= tile_positions[i].Origin.Y)
                     lowering.Remove(i);
                 else
                 {
+                    // var progress = 1f - data.Progress(Time.GetTicksMsec());
+                    // var speed = tile_speeds.Reverse().First(a => progress >= a.Item1).Item2;
                     var new_pos = trans.Translated(new(0, -0.01f, 0));
                     tile_areas[i].Transform = new_pos;
                     multi_mesh.SetInstanceTransform(i, new_pos);
