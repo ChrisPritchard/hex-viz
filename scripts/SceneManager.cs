@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 using Godot;
 using Microsoft.VisualBasic;
 
@@ -13,7 +14,8 @@ namespace HexViz
         [Export] public uint Cols { get; set; } = 100;
         [Export] public double GapBetweenHexes { get; set; } = 0.00;
 
-        [Export(PropertyHint.File, "*.txt")] public string TestMapPath { get; set; }
+        [Export(PropertyHint.File, "*.txt")] public string WorldMapPath { get; set; }
+        [Export(PropertyHint.File, "*.txt")] public string CityMapPath { get; set; }
 
         [Export] private MultiMeshInstance3D MapGrid;
         [Export] private CylinderMesh TileMesh;
@@ -26,25 +28,24 @@ namespace HexViz
         private readonly Dictionary<int, Tween> tile_tweens = [];
         private readonly HashSet<int> tiles_raised = [];
 
+        private readonly Dictionary<string, bool[,]> maps = [];
+
         public override void _Ready()
         {
             SetupGrid();
+            LoadMaps();
+            RenderGrid(maps["world"]);
+        }
 
-            var test_map_file = FileAccess.Open(TestMapPath, FileAccess.ModeFlags.Read);
-            var test_map_data = test_map_file.GetAsText().Split("\n");
-
-            var dim = test_map_data[0].Split(",").Select(int.Parse).ToArray();
-            var (w, h) = (dim[0], dim[1]);
-            var test_map = new bool[w, h];
-
-            test_map_data = test_map_data[1..];
-
-            // each line in the map file is a col, with left to right being bottom to top
-            for (var y = 0; y < h; y++)
-                for (var x = 0; x < w; x++)
-                    test_map[x, y] = test_map_data[y][w - x] == '1';
-
-            RenderGrid(test_map);
+        public async void ShowWorld()
+        {
+            await LowerAll();
+            RenderGrid(maps["world"]);
+        }
+        public async void ShowLondon()
+        {
+            await LowerAll();
+            RenderGrid(maps["london"]);
         }
 
         private void SetupGrid()
@@ -92,6 +93,29 @@ namespace HexViz
             tile_areas = [.. orig_areas];
         }
 
+        private void LoadMaps()
+        {
+            var map_info = new[] { ("world", WorldMapPath), ("london", CityMapPath) };
+            foreach (var (name, path) in map_info)
+            {
+                var map_file = FileAccess.Open(path, FileAccess.ModeFlags.Read);
+                var map_data = map_file.GetAsText().Split("\n");
+
+                var dim = map_data[0].Split(",").Select(int.Parse).ToArray();
+                var (w, h) = (dim[0], dim[1]);
+                var map = new bool[w, h];
+
+                map_data = map_data[1..];
+
+                // each line in the map file is a col, with left to right being bottom to top
+                for (var y = 0; y < h; y++)
+                    for (var x = 0; x < w; x++)
+                        map[x, y] = map_data[y][w - x] == '1';
+
+                maps[name] = map;
+            }
+        }
+
         private void RenderGrid(bool[,] grid)
         {
             var x_scale = (double)Rows / grid.GetLength(0);
@@ -134,45 +158,67 @@ namespace HexViz
         private bool RaiseTile(uint x, uint y, float height, float duration_secs = 2f)
         {
             var i = (int)(y * Cols + x);
-            if (tiles_raised.Contains(i))
+            return RaiseTile(i, height, duration_secs);
+        }
+
+        private bool RaiseTile(int index, float height, float duration_secs = 2f)
+        {
+            if (tiles_raised.Contains(index))
                 return false;
 
-            if (tile_tweens.TryGetValue(i, out Tween tween))
+            if (tile_tweens.TryGetValue(index, out Tween tween))
                 tween.Kill();
 
-            SetupTween(i, true);
-            var start = tile_positions[i].Origin;
+            SetupTween(index, true);
+            var start = tile_positions[index].Origin;
             var target = start + Vector3.Up * height;
-            tile_tweens[i].TweenMethod(Callable.From<Vector3>(position =>
+            tile_tweens[index].TweenMethod(Callable.From<Vector3>(position =>
             {
-                var newTransform = new Transform3D(tile_positions[i].Basis, position);
-                multi_mesh.SetInstanceTransform(i, newTransform);
-                tile_areas[i].GlobalPosition = position;
+                var newTransform = new Transform3D(tile_positions[index].Basis, position);
+                multi_mesh.SetInstanceTransform(index, newTransform);
+                tile_areas[index].GlobalPosition = position;
             }), start, target, duration_secs);
-            tile_tweens[i].Finished += () => tiles_raised.Add(i);
+            tile_tweens[index].Finished += () => tiles_raised.Add(index);
             return true;
         }
 
         private bool LowerTile(uint x, uint y, float duration_secs = 2f)
         {
             var i = (int)(y * Cols + x);
-            if (!tiles_raised.Contains(i))
+            return LowerTile(i, duration_secs);
+        }
+
+        private bool LowerTile(int index, float duration_secs = 2f)
+        {
+            if (!tiles_raised.Contains(index))
                 return false;
 
-            if (tile_tweens.TryGetValue(i, out Tween tween))
+            if (tile_tweens.TryGetValue(index, out Tween tween))
                 tween.Kill();
 
-            SetupTween(i, false);
-            var start = multi_mesh.GetInstanceTransform(i).Origin;
-            var target = tile_positions[i].Origin;
-            tile_tweens[i].TweenMethod(Callable.From<Vector3>(position =>
+            SetupTween(index, false);
+            var start = multi_mesh.GetInstanceTransform(index).Origin;
+            var target = tile_positions[index].Origin;
+            tile_tweens[index].TweenMethod(Callable.From<Vector3>(position =>
             {
-                var newTransform = new Transform3D(tile_positions[i].Basis, position);
-                multi_mesh.SetInstanceTransform(i, newTransform);
-                tile_areas[i].GlobalPosition = position;
+                var newTransform = new Transform3D(tile_positions[index].Basis, position);
+                multi_mesh.SetInstanceTransform(index, newTransform);
+                tile_areas[index].GlobalPosition = position;
             }), start, target, duration_secs);
-            tile_tweens[i].Finished += () => tiles_raised.Remove(i);
+            tile_tweens[index].Finished += () => tiles_raised.Remove(index);
             return true;
+        }
+
+        private async Task LowerAll()
+        {
+            var indices = tiles_raised.ToArray();
+            foreach (var i in indices)
+            {
+                LowerTile(i, 2f);
+                multi_mesh.SetInstanceColor(i, Colors.Black);
+            }
+
+            await Task.Delay(2000);
         }
 
         private void HandleClick(int index, uint x, uint y, InputEvent @event)

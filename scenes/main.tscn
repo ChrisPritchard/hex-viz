@@ -41,7 +41,8 @@ material = SubResource("StandardMaterial3D_0wfyh")
 
 [node name="MainScene" type="Node3D" node_paths=PackedStringArray("MapGrid")]
 script = ExtResource("1_0wfyh")
-TestMapPath = "res://assets/world_map_100x100.txt"
+WorldMapPath = "res://assets/world_map_100x100.txt"
+CityMapPath = "res://assets/london_map_100x100.txt"
 MapGrid = NodePath("MapGrid")
 TileMesh = SubResource("CylinderMesh_tbgi4")
 TileCollisionArea = ExtResource("3_tbgi4")
@@ -65,3 +66,22 @@ mesh = SubResource("BoxMesh_sugp2")
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 0.989523, 0.144373, 0, -0.144373, 0.989523, 0, 22.058, 0)
 light_energy = 0.5
+
+[node name="CanvasLayer" type="CanvasLayer" parent="."]
+
+[node name="ShowWorld" type="Button" parent="CanvasLayer"]
+offset_left = 7.0
+offset_top = 8.0
+offset_right = 100.0
+offset_bottom = 39.0
+text = "World Map"
+
+[node name="ShowLondon" type="Button" parent="CanvasLayer"]
+offset_left = 7.0
+offset_top = 47.0
+offset_right = 98.0
+offset_bottom = 78.0
+text = "London"
+
+[connection signal="pressed" from="CanvasLayer/ShowWorld" to="." method="ShowWorld"]
+[connection signal="pressed" from="CanvasLayer/ShowLondon" to="." method="ShowLondon"]
