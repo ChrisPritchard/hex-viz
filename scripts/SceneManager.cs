@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using Godot;
+using Microsoft.VisualBasic;
 
 namespace HexViz
 {
@@ -22,10 +23,8 @@ namespace HexViz
 
         private Transform3D[] tile_positions;
         private Area3D[] tile_areas;
-        private readonly HashSet<int> rising = [];
-        private readonly HashSet<int> lowering = [];
-
-        private readonly (float, float)[] tile_speeds = [(0.9f, 0.01f), (0.95f, 0.005f), (1f, 0.001f)];
+        private readonly Dictionary<int, Tween> tile_tweens = [];
+        private readonly HashSet<int> tiles_raised = [];
 
         public override void _Ready()
         {
@@ -109,87 +108,86 @@ namespace HexViz
                     var i = (int)(y * Cols + x);
                     if (grid[mx, my])
                     {
-                        RaiseTile(x, y, ((float)rnd.NextDouble() * 1f) + 1f);
-                        multi_mesh.SetInstanceColor(i, Colors.White);
+                        if (RaiseTile(x, y, ((float)rnd.NextDouble() * 1f) + 1f))
+                            multi_mesh.SetInstanceColor(i, Colors.White);
                     }
                     else
                     {
-                        LowerTile(x, y);
-                        multi_mesh.SetInstanceColor(i, Colors.Black);
+                        if (LowerTile(x, y))
+                            multi_mesh.SetInstanceColor(i, Colors.Black);
                     }
                 }
         }
 
-        private void RaiseTile(uint x, uint y, float height, float duration_secs = 2f)
+        private void SetupTween(int index, bool rising)
         {
-            var i = (int)(y * Cols + x);
-            lowering.Remove(i);
-            if (rising.Add(i))
-                multi_mesh.SetInstanceCustomData(i,
-                new TileAnimData(Time.GetTicksMsec(), duration_secs * 1000, height).AsCustomData());
+            if (tile_tweens.ContainsKey(index) && tile_tweens[index].IsRunning())
+                tile_tweens[index].Kill();
+
+            var tween = CreateTween();
+            tween.SetParallel(false);
+            tween.SetEase(rising ? Tween.EaseType.Out : Tween.EaseType.In);
+            tween.SetTrans(Tween.TransitionType.Quad);
+            tile_tweens[index] = tween;
         }
 
-        private void LowerTile(uint x, uint y, float duration_secs = 2f)
+        private bool RaiseTile(uint x, uint y, float height, float duration_secs = 2f)
         {
             var i = (int)(y * Cols + x);
-            rising.Remove(i);
-            if (lowering.Add(i))
-                multi_mesh.SetInstanceCustomData(i,
-                new TileAnimData(Time.GetTicksMsec(), duration_secs * 1000, 0).AsCustomData());
+            if (tiles_raised.Contains(i))
+                return false;
+
+            if (tile_tweens.TryGetValue(i, out Tween tween))
+                tween.Kill();
+
+            SetupTween(i, true);
+            var start = tile_positions[i].Origin;
+            var target = start + Vector3.Up * height;
+            tile_tweens[i].TweenMethod(Callable.From<Vector3>(position =>
+            {
+                var newTransform = new Transform3D(tile_positions[i].Basis, position);
+                multi_mesh.SetInstanceTransform(i, newTransform);
+                tile_areas[i].GlobalPosition = position;
+            }), start, target, duration_secs);
+            tile_tweens[i].Finished += () => tiles_raised.Add(i);
+            return true;
+        }
+
+        private bool LowerTile(uint x, uint y, float duration_secs = 2f)
+        {
+            var i = (int)(y * Cols + x);
+            if (!tiles_raised.Contains(i))
+                return false;
+
+            if (tile_tweens.TryGetValue(i, out Tween tween))
+                tween.Kill();
+
+            SetupTween(i, false);
+            var start = multi_mesh.GetInstanceTransform(i).Origin;
+            var target = tile_positions[i].Origin;
+            tile_tweens[i].TweenMethod(Callable.From<Vector3>(position =>
+            {
+                var newTransform = new Transform3D(tile_positions[i].Basis, position);
+                multi_mesh.SetInstanceTransform(i, newTransform);
+                tile_areas[i].GlobalPosition = position;
+            }), start, target, duration_secs);
+            tile_tweens[i].Finished += () => tiles_raised.Remove(i);
+            return true;
         }
 
         private void HandleClick(int index, uint x, uint y, InputEvent @event)
         {
             if (@event is InputEventMouseButton mouseEvent && mouseEvent.Pressed && mouseEvent.ButtonIndex == MouseButton.Left)
             {
-                if (multi_mesh.GetInstanceColor(index) != Colors.Green)
+                if (!tiles_raised.Contains(index))
                 {
-                    RaiseTile(x, y, 4);
-                    multi_mesh.SetInstanceColor(index, Colors.Green);
+                    if (RaiseTile(x, y, 4))
+                        multi_mesh.SetInstanceColor(index, Colors.Green);
                 }
                 else
                 {
-                    LowerTile(x, y);
-                    multi_mesh.SetInstanceColor(index, Colors.Yellow);
-                }
-            }
-        }
-
-        public override void _Process(double delta)
-        {
-            var rising_indices = rising.ToArray();
-            foreach (var i in rising_indices)
-            {
-                var trans = multi_mesh.GetInstanceTransform(i);
-                var data = TileAnimData.FromCustomData(multi_mesh.GetInstanceCustomData(i));
-
-                if (trans.Origin.Y >= tile_positions[i].Origin.Y + data.TargetHeight)
-                    rising.Remove(i);
-                else
-                {
-                    var progress = data.Progress(Time.GetTicksMsec());
-                    var speed = tile_speeds.First(a => progress <= a.Item1).Item2 / (data.Duration / 1000f);
-                    var new_pos = trans.Translated(new(0, speed, 0));
-                    tile_areas[i].Transform = new_pos;
-                    multi_mesh.SetInstanceTransform(i, new_pos);
-                }
-            }
-
-            var lowering_indices = lowering.ToArray();
-            foreach (var i in lowering_indices)
-            {
-                var trans = multi_mesh.GetInstanceTransform(i);
-                var data = TileAnimData.FromCustomData(multi_mesh.GetInstanceCustomData(i));
-
-                if (trans.Origin.Y <= tile_positions[i].Origin.Y)
-                    lowering.Remove(i);
-                else
-                {
-                    // var progress = 1f - data.Progress(Time.GetTicksMsec());
-                    // var speed = tile_speeds.Reverse().First(a => progress >= a.Item1).Item2;
-                    var new_pos = trans.Translated(new(0, -0.01f, 0));
-                    tile_areas[i].Transform = new_pos;
-                    multi_mesh.SetInstanceTransform(i, new_pos);
+                    if (LowerTile(x, y))
+                        multi_mesh.SetInstanceColor(index, Colors.Yellow);
                 }
             }
         }
