@@ -126,7 +126,6 @@ namespace HexViz
                     var mx = (int)(x / x_scale);
                     var my = (int)(y / y_scale);
 
-                    var i = (int)(y * Cols + x);
                     if (grid[mx, my])
                         RaiseTile(x, y, ((float)rnd.NextDouble() * 1f) + 1f, Colors.White);
                     else
